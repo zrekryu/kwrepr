@@ -63,18 +63,25 @@ class KWRepr:
             if isinstance(field, tuple):
                 name, callback = field
                 value = callback(inst)
+                if ":" in name:
+                    fmt_spec = name.split(":", 1)
+                    value = format(value, fmt_spec)
                 fields.append((name, value))
             else:
                 name = field
                 if name.startswith("__") and not name.endswith("__"):
                     name = f"_{type(inst).__name__}{name}"
 
+                if ":" in name:
+                    name, fmt_spec = name.split(":", 1)
                 try:
                     value = getattr(inst, name)
                 except AttributeError:
                     if not self.skip_missing:
                         raise AttributeError(f"Included attribute not found: {name}")
                 else:
+                    if fmt_spec:
+                        value = format(value, fmt_spec)
                     fields.append((name, value))
 
         return fields
