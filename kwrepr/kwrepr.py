@@ -64,7 +64,7 @@ class KWRepr:
                 name, callback = field
                 value = callback(inst)
                 if ":" in name:
-                    fmt_spec = name.split(":", 1)
+                    name, fmt_spec = name.split(":", 1)
                     value = format(value, fmt_spec)
                 fields.append((name, value))
             else:
@@ -72,6 +72,7 @@ class KWRepr:
                 if name.startswith("__") and not name.endswith("__"):
                     name = f"_{type(inst).__name__}{name}"
 
+                fmt_spec: str | None = None
                 if ":" in name:
                     name, fmt_spec = name.split(":", 1)
                 try:
