@@ -1,37 +1,43 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping, Sequence
-import reprlib
+from collections.abc import (
+    Callable,
+    Iterator,
+    Iterable,
+    Mapping,
+    Sequence
+)
 
-from types import MethodType
 from typing import Any
 
 from .types import Class, Instance
-
-
-class KWReprDescriptor:
-    def __init__(self, generate: Callable[[Instance], str]) -> None:
-        self.generate = generate
-
-    def __get__(self, instance: Instance | None, owner: Class) -> Instance | Callable[[], str]:
-        if instance is None:
-            return self.generate
-
-        return MethodType(self.generate, instance)
+from .field_extractors import (
+    BaseFieldExtractor,
+    DictFieldExtractor,
+    SlotsFieldExtractor,
+    IncludedFieldExtractor
+)
 
 
 class KWRepr:
     """
     Keyword-based representation (__repr__) on objects.
     """
+
+    DELIMITERS: tuple[str, str] = ("(", ")")
+
     def __init__(
         self,
+        class_or_inst: Class | Instance,
         *,
         include: Sequence[str] | None = None,
         exclude: Sequence[str] | None = None,
-        show_private: bool = False,
+        compute: Mapping[str, Callable[[Instance], Any]] | None = None,
+        format_spec: Mapping[str, str] | None = None,
+        exclude_private: bool = True,
         skip_missing: bool = False,
-        repr_config: Mapping[str, Any] | None = None
+        repr_config: Mapping[str, Any] | None = None,
+        delimiters: tuple[str, str] | None = None
     ) -> None:
         """
         Initiate class KWRepr.
@@ -39,7 +45,7 @@ class KWRepr:
         Parameters:
             include: Names of attributes to only include.
             exclude: Names of attributes to only exclude.
-            show_private: Whether to show private attributes.
+            exclude: Whether to exclude private attributes.
             skip_missing: Whether to skip missing attributes.
             repr_config: class reprlib.Repr init parameters.
 
@@ -50,100 +56,61 @@ class KWRepr:
         if include is not None and exclude is not None:
             raise ValueError("Cannot specify both 'include' and 'exclude'")
 
-        self.include = include or []
-        self.exclude = exclude or []
-        self.show_private = show_private
-        self.skip_missing = skip_missing
+        """self.include = include
+        self.exclude = exclude
+        self.compute = compute
+        self.format_spec = format_spec
+        self.exclude_private = exclude_private
+        self.skip_missing = skip_missing"""
+        self.repr_config = repr_config
+        self.delimiters = delimiters or self.DELIMITERS
 
-        self._repr = reprlib.Repr(**(repr_config or {}))
-
-    def extract_included_fields(self, inst: Instance) -> list[tuple[str, Any]]:
-        fields: list[tuple[str, Any]] = []
-        for field in self.include:
-            if isinstance(field, tuple):
-                name, callback = field
-                value = callback(inst)
-                if ":" in name:
-                    name, fmt_spec = name.split(":", 1)
-                    value = format(value, fmt_spec)
-                fields.append((name, value))
-            else:
-                name = field
-                if name.startswith("__") and not name.endswith("__"):
-                    name = f"_{type(inst).__name__}{name}"
-
-                fmt_spec: str | None = None
-                if ":" in name:
-                    name, fmt_spec = name.split(":", 1)
-                try:
-                    value = getattr(inst, name)
-                except AttributeError:
-                    if not self.skip_missing:
-                        raise AttributeError(f"Included attribute not found: {name}")
-                else:
-                    if fmt_spec:
-                        value = format(value, fmt_spec)
-                    fields.append((name, value))
-
-        return fields
-
-    def extract_dict_fields(self, inst: Instance) -> list[tuple[str, Any]]:
-        if self.include:
-            return self.extract_included_fields(inst)
-
-        fields: list[tuple[str, Any]] = []
-        for name, value in vars(inst).items():
-            if name in self.exclude:
-                continue
-            if name.startswith("_") and not self.show_private:
-                continue
-
-            fields.append((name, value))
-
-        return fields
-
-    def extract_slots_fields(self, inst: Instance) -> list[tuple[str, Any]]:
-        if self.include:
-            return self.extract_included_fields(inst)
-
-        fields: list[tuple[str, Any]] = []
-        for name in type(inst).__slots__:
-            if name in self.exclude:
-                continue
-            if name.startswith("_") and not self.show_private:
-                continue
-            if name.startswith("__") and not name.endswith("__"):
-                name = f"_{type(inst).__name__}{name}"
-
-            value = getattr(inst, name)
-            fields.append((name, value))
-
-        return fields
-
-    def extract_fields(self, inst: Instance) -> list[tuple[str, Any]]:
-        if hasattr(inst, "__dict__"):
-            return self.extract_dict_fields(inst)
-        elif hasattr(inst, "__slots__"):
-            return self.extract_slots_fields(inst)
-        else:
-            raise TypeError(f"{type(inst).__name__} must define either __dict__ or __slots__")
-
-    def generate_str(self, inst: Instance, fields: Sequence[tuple[str, Any]]) -> str:
-        name = type(inst).__qualname__
-        body = ", ".join(
-            f"{name}={self._repr.repr(value)}"
-            for name, value in fields
+        field_extractor_cls: BaseFieldExtractor = self.resolve_field_extractor(class_or_inst, include)
+        self.field_extractor: BaseFieldExtractor = field_extractor_cls(
+            include=include,
+            exclude=exclude,
+            compute=compute,
+            format_spec=format_spec,
+            exclude_private=exclude_private,
+            skip_missing=skip_missing,
+            repr_config=repr_config
         )
-        kwrepr_str = f"{name}({body})"
-        return kwrepr_str
+
+    def generate_body(self, fields: Iterable[tuple[str, str]]) -> str:
+        return ", ".join(
+            f"{field_name}={field_value}"
+            for field_name, field_value in fields
+        )
+
+    def generate_str(self, inst: Instance, fields: Iterable[tuple[str, str]]) -> str:
+        name = type(inst).__qualname__
+        start, end = self.delimiters
+
+        body = self.generate_body(fields)
+
+        parts: list[str] = [name, start, body, end]
+
+        return "".join(parts)
 
     def generate(self, inst: Instance) -> str:
-        fields = self.extract_fields(inst)
+        fields = self.field_extractor.extract_fields(inst)
         repr_str = self.generate_str(inst, fields)
         return repr_str
 
-    def __call__(self, inst: Instance) -> str:
-        return self.generate(inst)
+    @staticmethod
+    def resolve_field_extractor(class_or_inst: Class | Instance, include: Sequence[str] | None = None) -> type[BaseFieldExtractor]:
+        class_: Class = class_or_inst if isinstance(class_or_inst, type) else type(class_or_inst)
+
+        if include is not None:
+            return IncludedFieldExtractor
+        if hasattr(class_, "__dict__"):
+            return DictFieldExtractor
+        if hasattr(class_, "__slots__"):
+            return SlotsFieldExtractor
+
+        raise TypeError(
+            f"Type {type(class_).__name__} must define either '__dict__' or '__slots__'"
+        )
 
     @classmethod
     def inject_repr(
@@ -151,16 +118,28 @@ class KWRepr:
         class_: Class,
         include: Sequence[str] | None = None,
         exclude: Sequence[str] | None = None,
-        show_private: bool = False,
+        compute: Mapping[str, Callable[[Instance], Any]] | None = None,
+        format_spec: Mapping[str, str] | None = None,
+        exclude_private: bool = False,
         skip_missing: bool = False,
-        repr_config: Mapping[str, Any] | None = None
+        repr_config: Mapping[str, Any] | None = None,
+        delimiters: tuple[str, str] | None = None
     ) -> None:
         kwrepr: KWRepr = cls(
+            class_or_inst=class_,
             include=include,
             exclude=exclude,
-            show_private=show_private,
+            compute=compute,
+            format_spec=format_spec,
+            exclude_private=exclude_private,
             skip_missing=skip_missing,
-            repr_config=repr_config
+            repr_config=repr_config,
+            delimiters=delimiters
         )
 
-        class_.__repr__ =  KWReprDescriptor(kwrepr.generate)
+        def _repr(self):
+            return kwrepr.generate(self)
+
+        _repr.__qualname__ = f"{class_.__name__}.__repr__"
+
+        class_.__repr__ = _repr

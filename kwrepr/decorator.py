@@ -1,7 +1,8 @@
 from collections.abc import Callable, Mapping, Sequence
 from typing import Any, overload
 
-from .types import Class
+from .types import Class, Instance
+from .field_extractors import BaseFieldExtractor
 from .kwrepr import KWRepr
 
 
@@ -16,9 +17,12 @@ def apply_kwrepr(
     *,
     include: Sequence[str] | None = None,
     exclude: Sequence[str] | None = None,
-    show_private: bool = False,
+    compute: Mapping[str, Callable[[Instance], Any]] | None = None,
+    format_spec: Mapping[str, str] | None = None,
+    exclude_private: bool = True,
     skip_missing: bool = False,
-    repr_config: Mapping[str, Any] | None = None
+    repr_config: Mapping[str, Any] | None = None,
+    delimiters: tuple[str, str] | None = None
 ) -> Callable[[Class], Class] | Class:
 
     def inject_repr(class_: Class) -> None:
@@ -26,16 +30,19 @@ def apply_kwrepr(
             class_=class_,
             include=include,
             exclude=exclude,
-            show_private=show_private,
+            compute=compute,
+            format_spec=format_spec,
+            exclude_private=exclude_private,
             skip_missing=skip_missing,
-            repr_config=repr_config
+            repr_config=repr_config,
+            delimiters=delimiters
         )
 
-    if class_ is not None:
+    def wrapper(class_: Class) -> Class:
         inject_repr(class_)
         return class_
 
-    def wrapper(class_: Class) -> Class:
+    if class_ is not None:
         inject_repr(class_)
         return class_
 
