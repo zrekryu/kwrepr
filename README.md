@@ -28,7 +28,7 @@ Basic decorator:
 ```python
 from kwrepr import apply_kwrepr
 
-@apply_kwrepr()
+@apply_kwrepr
 class User:
     def __init__(self, id, name, _password):
         self.id = id
