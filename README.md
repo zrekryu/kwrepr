@@ -1,6 +1,6 @@
 # kwrepr
 
-kwrepr automatically generates keyword-style __repr__ methods for your Python classes.
+kwrepr automatically generates keyword-style `__repr__` methods for your Python classes.
 
 It lets you control which fields appear, add computed fields, format output, and handle private fields easily.
 
