@@ -1,4 +1,4 @@
-from collections.abc import Callabl£~e, Iterator, Mapping, Sequence
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any
 
 from .base_field_extractor import BaseFieldExtractor
@@ -29,9 +29,6 @@ class IncludedFieldExtractor(BaseFieldExtractor):
 
     def extract_fields(self, inst: Instance) -> Iterator[tuple[str, str]]:
         for field_name in self.include:
-            if not self.is_field_allowed(field_name):
-                continue
-
             if field_name.startswith("__") and not field_name.endswith("__"):
                 field_name = f"_{type(inst).__name__}{field_name}"
 
