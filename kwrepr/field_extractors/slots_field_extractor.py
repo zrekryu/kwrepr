@@ -38,8 +38,10 @@ class SlotsFieldExtractor(BaseFieldExtractor):
             try:
                 field_value = getattr(inst, field_name)
             except AttributeError:
-                if not self.skip_missing:
-                    raise AttributeError(f"Missing required attribute: {field_name}") from None
+                if self.skip_missing:
+                    continue
+
+                raise AttributeError(f"Missing required attribute: {field_name}") from None
 
             field_value = self.process_field_value(inst, field_name, field_value)
 
