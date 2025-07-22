@@ -142,7 +142,7 @@ class MyClass:
         self.y = y
         self._secret = _secret
 
-KWRepr.inject_repr(MyClass, exclude=["_secret"])
+KWRepr.inject_repr(MyClass)
 
 print(MyClass(1, 2, "hidden"))
 # MyClass(x=1, y=2)
