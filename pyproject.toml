@@ -1,0 +1,31 @@
+[project]
+name = "kwrepr"
+version = "0.1.0"
+description = "Keyword-style __repr__ injector with support for __dict__ and __slots__"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+authors = [
+  { name="Zrekryu", email="zrekryu@gmail.com" }
+]
+keywords = ["repr", "debug", "reflection", "slots", "dataclass-alternative"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.12",
+  "License :: OSI Approved :: MIT License",
+  "Intended Audience :: Developers",
+  "Topic :: Software Development :: Libraries"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/Zrekryu/kwrepr"
+"Repository" = "https://github.com/Zrekryu/kwrepr"
+"Issue Tracker" = "https://github.com/Zrekryu/kwrepr/issues"
+
+[tool.setuptools]
+packages = ["kwrepr"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
