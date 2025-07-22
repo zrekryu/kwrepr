@@ -59,7 +59,6 @@ print(User(1, "Alice", "secret"))
 ---
 
 ## Using include and exclude
---------------------------
 
 - You cannot use both `include` and `exclude` at the same time.
 - By default, private fields (fields starting with `_`) are excluded.
