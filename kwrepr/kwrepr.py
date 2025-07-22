@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from collections.abc import (
     Callable,
     Iterator,
@@ -40,32 +38,27 @@ class KWRepr:
         delimiters: tuple[str, str] | None = None
     ) -> None:
         """
-        Initiate class KWRepr.
+        Initiate KWRepr object.
 
         Parameters:
             include: Names of attributes to only include.
             exclude: Names of attributes to only exclude.
-            exclude: Whether to exclude private attributes.
+            exclude_private: Whether to exclude private attributes.
+            compute: Field values to compute.
+            format_spec: Format specification for field values.
             skip_missing: Whether to skip missing attributes.
-            repr_config: class reprlib.Repr init parameters.
+            repr_config: class reprlib.Repr's __init__ parameters.
 
         Raises:
-            ValueError:
-                If specified both include and exclude parameters.
+            ValueError: Both include and exclude parameters were specified.
         """
         if include is not None and exclude is not None:
             raise ValueError("Cannot specify both 'include' and 'exclude'")
 
-        """self.include = include
-        self.exclude = exclude
-        self.compute = compute
-        self.format_spec = format_spec
-        self.exclude_private = exclude_private
-        self.skip_missing = skip_missing"""
-        self.repr_config = repr_config
         self.delimiters = delimiters or self.DELIMITERS
 
         field_extractor_cls: BaseFieldExtractor = self.resolve_field_extractor(class_or_inst, include)
+
         self.field_extractor: BaseFieldExtractor = field_extractor_cls(
             include=include,
             exclude=exclude,
@@ -99,10 +92,11 @@ class KWRepr:
 
     @staticmethod
     def resolve_field_extractor(class_or_inst: Class | Instance, include: Sequence[str] | None = None) -> type[BaseFieldExtractor]:
-        class_: Class = class_or_inst if isinstance(class_or_inst, type) else type(class_or_inst)
-
         if include is not None:
             return IncludedFieldExtractor
+
+        class_: Class = class_or_inst if isinstance(class_or_inst, type) else type(class_or_inst)
+
         if hasattr(class_, "__dict__"):
             return DictFieldExtractor
         if hasattr(class_, "__slots__"):
