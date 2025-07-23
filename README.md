@@ -105,14 +105,16 @@ print(User(1, "Alice", "secret", "abc123"))
 ## Computed fields:
 
 ```python
-@apply_kwrepr(compute={"full_name": lambda self: f"{self.first} {self.last}"})
-class Person:
-    def __init__(self, first, last):
-        self.first = first
-        self.last = last
+from pathlib import Path
 
-print(Person("Alice", "Smith"))
-# Person(first='Alice', last='Smith', full_name='Alice Smith')
+@apply_kwrepr(compute={
+    "filename": lambda self: self.path.name,
+    "size": lambda self: self.stat.st_size
+})
+class FileMeta:
+    def __init__(self, path: Path):
+        self.path = path
+        self.stat = path.stat()
 ```
 
 ---
