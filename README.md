@@ -116,9 +116,8 @@ from datetime import datetime
 )
 class FileMeta:
     def __init__(self, path: Path):
-        stat = path.stat()
         self.path = path
-        self.size = stat.st_size
+        self.size = self.path.stat().st_size
         self.created_at = datetime.fromtimestamp(stat.st_ctime)
 ```
 
