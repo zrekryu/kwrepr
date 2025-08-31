@@ -30,10 +30,10 @@ from kwrepr import apply_kwrepr
 
 @apply_kwrepr
 class User:
-    def __init__(self, id, name, _password):
+    def __init__(self, id, name, password):
         self.id = id
         self.name = name
-        self._password = _password
+        self._password = password
 
 print(User(1, "Alice", "secret"))
 # User(id=1, name='Alice')
@@ -48,10 +48,10 @@ Private fields excluded by default.
 ```python
 @apply_kwrepr(exclude_private=False)
 class User:
-    def __init__(self, id, name, _password):
+    def __init__(self, id, name, password):
         self.id = id
         self.name = name
-        self._password = _password
+        self._password = password
 
 print(User(1, "Alice", "secret"))
 # User(id=1, name='Alice', _password='secret')
@@ -73,11 +73,11 @@ from kwrepr import apply_kwrepr
 
 @apply_kwrepr(include=["id", "name", "_token"])
 class User:
-    def __init__(self, id, name, _password, _token):
+    def __init__(self, id, name, password, token):
         self.id = id
         self.name = name
-        self._password = _password
-        self._token = _token
+        self._password = password
+        self._token = token
 
 print(User(2, "Bob", "hunter2", "xyz789"))
 # Output: User(id=2, name='Bob', _token='xyz789')
@@ -91,11 +91,11 @@ from kwrepr import apply_kwrepr
 
 @apply_kwrepr(exclude=["_password"], exclude_private=False)
 class User:
-    def __init__(self, id, name, _password, _token):
+    def __init__(self, id, name, password, token):
         self.id = id
         self.name = name
-        self._password = _password
-        self._token = _token
+        self._password = password
+        self._token = token
 
 print(User(1, "Alice", "secret", "abc123"))
 # Output: User(id=1, name='Alice', _token='abc123')
@@ -139,10 +139,10 @@ print(Player(92.756))
 from kwrepr import KWRepr
 
 class MyClass:
-    def __init__(self, x, y, _secret):
+    def __init__(self, x, y, secret):
         self.x = x
         self.y = y
-        self._secret = _secret
+        self._secret = secret
 
 KWRepr.inject_repr(MyClass)
 
