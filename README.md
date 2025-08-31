@@ -106,15 +106,20 @@ print(User(1, "Alice", "secret", "abc123"))
 
 ```python
 from pathlib import Path
+from datetime import datetime
 
-@apply_kwrepr(compute={
-    "filename": lambda self: self.path.name,
-    "size": lambda self: self.stat.st_size
-})
+@apply_kwrepr(
+    compute={
+        "size": lambda self: f"{self.size:,} bytes",  # self is bound to the instance of FileMeta.
+        "created_at": lambda self: self.created_at.strftime("%Y-%m-%d %H:%M:%S")
+    }
+)
 class FileMeta:
     def __init__(self, path: Path):
+        stat = path.stat()
         self.path = path
-        self.stat = path.stat()
+        self.size = stat.st_size
+        self.created_at = datetime.fromtimestamp(stat.st_ctime)
 ```
 
 ---
