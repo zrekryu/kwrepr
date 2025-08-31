@@ -23,9 +23,6 @@ classifiers = [
 "Repository" = "https://github.com/Zrekryu/kwrepr"
 "Issue Tracker" = "https://github.com/Zrekryu/kwrepr/issues"
 
-[tool.setuptools]
-packages = ["kwrepr"]
-
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
