@@ -1,6 +1,5 @@
 from collections.abc import (
     Callable,
-    Iterator,
     Iterable,
     Mapping,
     Sequence
