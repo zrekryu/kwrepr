@@ -40,10 +40,10 @@ class BaseFieldExtractor(ABC):
         return True
 
     def process_field_value(self, inst: Instance, field_name: str, field_value: Any) -> str:
-        if (field_computer := self.compute.get(field_name)):
+        if field_computer := self.compute.get(field_name):
             field_value = field_computer(inst)
 
-        if (format_spec := self.format_spec.get(field_name)):
+        if format_spec := self.format_spec.get(field_name):
             field_value = format(field_value, format_spec)
         else:
             field_value = self.repr_field_value(field_value)
