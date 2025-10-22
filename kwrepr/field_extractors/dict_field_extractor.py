@@ -2,7 +2,7 @@ from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any
 
 from .base_field_extractor import BaseFieldExtractor
-from ..types import Instance
+from kwrepr.types import Instance
 
 
 class DictFieldExtractor(BaseFieldExtractor):
