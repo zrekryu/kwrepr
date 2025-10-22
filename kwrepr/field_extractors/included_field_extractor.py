@@ -1,8 +1,9 @@
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from typing import Any
 
+from kwrepr.types import Instance
+
 from .base_field_extractor import BaseFieldExtractor
-from ..types import Instance
 
 
 class IncludedFieldExtractor(BaseFieldExtractor):
